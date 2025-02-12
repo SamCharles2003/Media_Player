@@ -1,9 +1,6 @@
 from flask import Flask, jsonify, request, render_template, Response, url_for, abort
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
-import io
-import re
-import tempfile
 import os
 import requests
 
