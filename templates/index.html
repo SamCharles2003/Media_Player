@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Player</title>
+    <style>
+        :root {
+            --background-base: #121212;
+            --background-highlight: #282828;
+            --background-press: #000;
+            --text-base: #fff;
+            --text-subdued: #a7a7a7;
+            --accent: #1DB954;
+            --error: #f15e6c;
+            --sidebar-width: 300px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--background-base);
+            color: var(--text-base);
+            line-height: 1.5;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .file-browser {
+            background: var(--background-press);
+            padding: 20px;
+            position: fixed;
+            width: var(--sidebar-width);
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .media-player {
+            padding: 20px;
+            margin-left: var(--sidebar-width);
+            background: var(--background-base);
+            min-height: 100vh;
+        }
+
+        .breadcrumb {
+            background: var(--background-highlight);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb span {
+            cursor: pointer;
+            color: var(--text-subdued);
+            transition: color 0.2s;
+        }
+
+        .breadcrumb span:hover {
+            color: var(--text-base);
+        }
+
+        .folder-item, .media-item {
+            padding: 12px;
+            margin: 4px 0;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            background: var(--background-highlight);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .folder-item:hover, .media-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .media-item.playing {
+            background: rgba(29, 185, 84, 0.2);
+            border-left: 4px solid var(--accent);
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #current-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--text-base);
+        }
+
+        audio, video {
+            width: 100%;
+            border-radius: 8px;
+            background: var(--background-highlight);
+            margin-top: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .file-browser {
+                position: relative;
+                width: 100%;
+                height: auto;
+                padding: 10px;
+            }
+
+            .media-player {
+                margin-left: 0;
+                padding: 10px;
+            }
+
+            :root {
+                --sidebar-width: 100%;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background-base);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--background-highlight);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-subdued);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="file-browser">
+            <div class="breadcrumb" id="breadcrumb">
+                <span onclick="navigateToRoot()">Home</span>
+            </div>
+            <div id="file-list"></div>
+        </div>
+        <div class="media-player">
+            <h2 id="current-title">Select a media file to play</h2>
+            <div id="player-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // Previous JavaScript code remains the same, but add these icon functions:
+        function getFolderIcon() {
+            return '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>';
+        }
+
+        function getMusicIcon() {
+            return '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
+        }
+
+        function getVideoIcon() {
+            return '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>';
+        }
+
+        let currentFolderId = 'root';  // Replace with your root folder ID
+        let folderHistory = [];
+        let currentItems = [];  // Store current folder items
+        let currentPlayingIndex = -1;  // Track current playing item
+        
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFolder(currentFolderId);
+        });
+        
+        function loadFolder(folderId) {
+            fetch(`/api/folders/${folderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentItems = data.items;  // Store items
+                        displayItems(currentItems);
+                        currentFolderId = folderId;
+                        updateBreadcrumb();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        
+        function displayItems(items) {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+            
+            items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = item.type === 'folder' ? 'folder-item' : 'media-item';
+                div.textContent = item.title;
+                
+                if (index === currentPlayingIndex) {
+                    div.classList.add('playing');
+                }
+                
+                div.onclick = () => {
+                    if (item.type === 'folder') {
+                        folderHistory.push({id: currentFolderId, title: item.title});
+                        loadFolder(item.id);
+                    } else {
+                        playMedia(item, index);
+                    }
+                };
+                
+                fileList.appendChild(div);
+            });
+        }
+        
+        function playMedia(item, index) {
+            const playerContainer = document.getElementById('player-container');
+            const titleElement = document.getElementById('current-title');
+            titleElement.textContent = item.title;
+            
+            // Update current playing index
+            currentPlayingIndex = index;
+            
+            // Update visual indication
+            document.querySelectorAll('.media-item').forEach(el => el.classList.remove('playing'));
+            document.querySelectorAll('.media-item')[index].classList.add('playing');
+            
+            let mediaElement;
+            if (item.type === 'audio') {
+                mediaElement = document.createElement('audio');
+            } else if (item.type === 'video') {
+                mediaElement = document.createElement('video');
+            }
+            
+            if (mediaElement) {
+                mediaElement.controls = true;
+                mediaElement.src = `/api/stream/${item.id}`;
+                
+                // Add event listener for when media ends
+                mediaElement.addEventListener('ended', () => {
+                    playNextMedia();
+                });
+                
+                playerContainer.innerHTML = '';
+                playerContainer.appendChild(mediaElement);
+                mediaElement.play();
+            }
+        }
+        
+        function playNextMedia() {
+            // Filter only media items (not folders)
+            const mediaItems = currentItems.filter(item => item.type === 'audio' || item.type === 'video');
+            
+            // Find the current media item's index in the filtered list
+            const currentMediaIndex = mediaItems.findIndex((item, index) => index === currentPlayingIndex);
+            
+            // If there's a next media item, play it
+            if (currentMediaIndex < mediaItems.length - 1) {
+                const nextItem = mediaItems[currentMediaIndex + 1];
+                const nextIndex = currentItems.findIndex(item => item.id === nextItem.id);
+                playMedia(nextItem, nextIndex);
+            }
+        }
+        
+        function updateBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumb');
+            breadcrumb.innerHTML = '<span onclick="navigateToRoot()">Home</span>';
+            
+            folderHistory.forEach((folder, index) => {
+                breadcrumb.innerHTML += ' > ';
+                const span = document.createElement('span');
+                span.textContent = folder.title;
+                span.onclick = () => navigateToFolder(index);
+                breadcrumb.appendChild(span);
+            });
+        }
+        
+        function navigateToRoot() {
+            folderHistory = [];
+            loadFolder('root');
+        }
+        
+        function navigateToFolder(index) {
+            const targetFolder = folderHistory[index];
+            folderHistory = folderHistory.slice(0, index);
+            loadFolder(targetFolder.id);
+        }
+    </script>
+</body>
+</html>
