@@ -1,3 +1,4 @@
 flask==2.0.1
 pydrive2==1.15.0
 requests==2.26.0
+gunicorn
