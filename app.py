@@ -199,5 +199,5 @@ if __name__ == '__main__':
     keep_alive_thread.start()
     
     # Get port from environment variable (Render sets this automatically)
-    port = int(os.getenv('PORT', 5000))
+    port = int(os.getenv('PORT', 10000))
     app.run(host='0.0.0.0',debug=True)
