@@ -3,6 +3,8 @@ from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 import os
 import requests
+import threading
+import time
 
 app = Flask(__name__)
 
@@ -155,5 +157,47 @@ def stream_media(file_id):
         app.logger.error(f"Streaming error for file {file_id}: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+
+
+
+
+def keep_alive():
+    """
+    Background thread function that sends requests every 14 minutes
+    to prevent Render from spinning down the service.
+    """
+    with app.app_context():
+        while True:
+            try:
+                print("Sending keep-alive request...")
+                # Get the deployment URL from environment variable
+                deployment_url = os.getenv('RENDER_EXTERNAL_URL', 'http://localhost:5000')
+                # Make the request to the keep-alive endpoint
+                response = requests.get(f"{deployment_url}/keepActive")
+                print(f"Keep-alive response status: {response.status_code}")
+                # Sleep for 14 minutes (840 seconds)
+                # This is just under Render's 15-minute timeout
+                time.sleep(840)
+            except Exception as e:
+                print(f"Keep-alive request failed: {e}")
+                # If request fails, wait 1 minute before retrying
+                time.sleep(60)
+
+@app.route('/keepActive')
+def keep_active():
+    """Endpoint that confirms the server is active."""
+    print("Keep-alive endpoint hit")
+    return 'Server is active'
+
+
+
 if __name__ == '__main__':
+
+
+    keep_alive_thread = threading.Thread(target=keep_alive, daemon=True)
+    keep_alive_thread.start()
+    
+    # Get port from environment variable (Render sets this automatically)
+    port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0',debug=True)
