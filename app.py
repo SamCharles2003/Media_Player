@@ -191,11 +191,16 @@ def keep_active():
     return 'Server is active'
 
 
+def activate():
+    While(True):
+        print("Im Active")
+
+
 
 if __name__ == '__main__':
 
 
-    keep_alive_thread = threading.Thread(target=keep_alive, daemon=True)
+    keep_alive_thread = threading.Thread(target=activate, daemon=True)
     keep_alive_thread.start()
     
     # Get port from environment variable (Render sets this automatically)
