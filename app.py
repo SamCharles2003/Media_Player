@@ -192,7 +192,7 @@ def keep_active():
 
 
 def activate():
-    While(True):
+    while True:
         print("Im Active")
 
 
