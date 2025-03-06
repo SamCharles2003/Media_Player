@@ -178,7 +178,7 @@ def keep_alive():
                 print(f"Keep-alive response status: {response.status_code}")
                 # Sleep for 14 minutes (840 seconds)
                 # This is just under Render's 15-minute timeout
-                time.sleep(840)
+                time.sleep(30)
             except Exception as e:
                 print(f"Keep-alive request failed: {e}")
                 # If request fails, wait 1 minute before retrying
