@@ -172,7 +172,7 @@ def keep_alive():
             try:
                 print("Sending keep-alive request...")
                 # Get the deployment URL from environment variable
-                deployment_url = https://media-player-zgvy.onrender.com #os.getenv('RENDER_EXTERNAL_URL', 'http://localhost:5000')
+                deployment_url ="https://media-player-zgvy.onrender.com" #os.getenv('RENDER_EXTERNAL_URL', 'http://localhost:5000')
                 # Make the request to the keep-alive endpoint
                 response = requests.get(f"{deployment_url}/keepActive")
                 print(f"Keep-alive response status: {response.status_code}")
