@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +7,7 @@
     <title>Media Player</title>
     <style>
         :root {
-            --background-base: #121212;
+            --background-base:rgb(255, 88, 88);
             --background-highlight: #282828;
             --background-press: #000;
             --text-base: #fff;
@@ -46,11 +47,13 @@
         }
 
         .media-player {
-            top:0px;
             padding: 20px;
             margin-left: var(--sidebar-width);
             background: var(--background-base);
             min-height: 100vh;
+            /* Added display flex and flex-direction to control the order */
+            display: flex;
+            flex-direction: column;
         }
 
         .breadcrumb {
@@ -104,14 +107,28 @@
             margin-bottom: 20px;
             color: var(--text-base);
         }
+        #player-container {
+            order: -1;
+            margin-bottom: 20px;
+            width: 100%;
+            min-height: 300px; /* Increased minimum height */
+            background: var(--background-highlight);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 1200px; /* Add this to restrict the maximum width */
+           
+        }
 
         audio, video {
             width: 100%;
+            min-height: 280px; /* Set explicit minimum height for video */
             border-radius: 8px;
             background: var(--background-highlight);
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
-
         /* Responsive Design */
         @media (max-width: 768px) {
             .container {
@@ -163,8 +180,8 @@
             <div id="file-list"></div>
         </div>
         <div class="media-player">
-            <h2 id="current-title">Select a media file to play</h2>
             <div id="player-container"></div>
+            <h2 id="current-title">Select a media file to play</h2>
         </div>
     </div>
 
@@ -190,6 +207,8 @@
         // Initial load
         document.addEventListener('DOMContentLoaded', () => {
             loadFolder(currentFolderId);
+            const playerContainer = document.getElementById('player-container');
+            playerContainer.innerHTML = '<div style="text-align: center; padding: 100px 20px; color: var(--text-subdued);">Select a media file to play</div>';
         });
         
         function loadFolder(folderId) {
