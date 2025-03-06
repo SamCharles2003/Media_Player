@@ -178,7 +178,7 @@ def keep_alive():
                 print(f"Keep-alive response status: {response.status_code}")
                 # Sleep for 14 minutes (840 seconds)
                 # This is just under Render's 15-minute timeout
-                time.sleep(30)
+                time.sleep(10)
             except Exception as e:
                 print(f"Keep-alive request failed: {e}")
                 # If request fails, wait 1 minute before retrying
@@ -200,7 +200,7 @@ def activate():
 if __name__ == '__main__':
 
 
-    keep_alive_thread = threading.Thread(target=activate, daemon=True)
+    keep_alive_thread = threading.Thread(target=keep_alive, daemon=True)
     keep_alive_thread.start()
     
     # Get port from environment variable (Render sets this automatically)
