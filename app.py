@@ -188,7 +188,7 @@ def keep_alive():
 def keep_active():
     """Endpoint that confirms the server is active."""
     print("Keep-alive endpoint hit")
-    return 'Server is active'
+    return 200
 
 
 def activate():
